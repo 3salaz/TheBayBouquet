@@ -1,3 +1,5 @@
+import Button from "../components/ui/Button";
+
 export default function HomePage() {
     return (
         <section className="space-y-4">
@@ -13,6 +15,10 @@ export default function HomePage() {
                 A simple floral storefront MVP to showcase bouquet designs, accept
                 custom orders, and help grow the business.
             </p>
+
+            <div className="pt-4">
+                <Button>Order Flowers</Button>
+            </div>
         </section>
     )
 }
