@@ -1,5 +1,6 @@
 import { Link, Outlet } from "react-router-dom"
 import Container from "./components/layout/Container"
+import Footer from "./components/layout/Footer"
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Outlet />
         </Container>
       </main>
+      <Footer />
     </div>
   )
 }
