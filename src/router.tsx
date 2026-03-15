@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage"
 import BouquetsPage from "./pages/BouquetsPage"
 import CustomOrderPage from "./pages/CustomOrderPage"
 import ContactPage from "./pages/ContactPage"
+import BouquetDetailsPage from "./pages/BouquetDetailPage"
 
 export const router = createBrowserRouter([
     {
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
             { path: "bouquets", element: <BouquetsPage /> },
             { path: "custom-order", element: <CustomOrderPage /> },
             { path: "contact", element: <ContactPage /> },
+            { path: "bouquets/:bouquetId", element: <BouquetDetailsPage /> },
         ],
     },
 ])
