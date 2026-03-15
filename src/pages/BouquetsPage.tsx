@@ -1,9 +1,13 @@
 import Card from "../components/ui/Card";
+import SectionHeading from "../components/ui/SectionHeading";
 
 export default function BouquetsPage() {
     return (
         <section className="space-y-6">
-            <h1 className="text-3xl font-semibold tracking-tight">Bouquets</h1>
+            <SectionHeading
+                title="Bouquets"
+                description="Browse featured bouquet styles and signature arrangements."
+            />
 
             <div className="grid gap-6 md:grid-cols-3">
                 <Card>
