@@ -1,3 +1,4 @@
+import BouquetCard from "../components/bouquets/BouquetCard";
 import Card from "../components/ui/Card";
 import SectionHeading from "../components/ui/SectionHeading";
 
@@ -10,29 +11,23 @@ export default function BouquetsPage() {
             />
 
             <div className="grid gap-6 md:grid-cols-3">
-                <Card>
-                    <h3 className="text-lg font-semibold">Sunset Roses</h3>
-                    <p className="text-sm text-neutral-600">
-                        A warm bouquet of red and orange roses.
-                    </p>
-                    <p className="mt-2 font-medium">$45</p>
-                </Card>
+                <BouquetCard
+                    name="Sunset Roses"
+                    description="A warm bouquet of red and orange roses."
+                    price={45}
+                />
 
-                <Card>
-                    <h3 className="text-lg font-semibold">Spring Garden</h3>
-                    <p className="text-sm text-neutral-600">
-                        Soft pastel flowers perfect for celebrations.
-                    </p>
-                    <p className="mt-2 font-medium">$55</p>
-                </Card>
+                <BouquetCard
+                    name="Spring Garden"
+                    description="Soft pastel flowers perfect for celebrations."
+                    price={55}
+                />
 
-                <Card>
-                    <h3 className="text-lg font-semibold">Classic Romance</h3>
-                    <p className="text-sm text-neutral-600">
-                        Deep red roses for anniversaries and romance.
-                    </p>
-                    <p className="mt-2 font-medium">$60</p>
-                </Card>
+                <BouquetCard
+                    name="Classic Romance"
+                    description="Deep red roses for anniversaries and romance."
+                    price={60}
+                />
             </div>
         </section>
     )
