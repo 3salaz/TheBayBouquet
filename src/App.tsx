@@ -1,4 +1,5 @@
 import { Link, Outlet } from "react-router-dom"
+import Container from "./components/layout/Container"
 
 export default function App() {
   return (
@@ -26,8 +27,10 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-12">
-        <Outlet />
+      <main>
+        <Container>
+          <Outlet />
+        </Container>
       </main>
     </div>
   )
