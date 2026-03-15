@@ -1,11 +1,14 @@
+import bouquet1 from "../assets/bouquets/beige-and-white-flower-bouquet.jpg"
+import bouquet2 from "../assets/bouquets/person-holding-bouquet-of-flowers.jpg"
+import bouquet3 from "../assets/bouquets/pink-and-white-rose-bouquet.jpg"
+
 export const bouquets = [
     {
         id: "sunset-roses",
         name: "Sunset Roses",
         description: "A warm bouquet of red and orange roses.",
         price: 45,
-        image:
-            "https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?auto=format&fit=crop&w=800&q=80",
+        image: bouquet1,
         tags: ["Romantic", "Anniversary", "Best Seller"],
     },
     {
@@ -13,8 +16,7 @@ export const bouquets = [
         name: "Spring Garden",
         description: "Soft pastel flowers perfect for celebrations.",
         price: 55,
-        image:
-            "https://images.unsplash.com/photo-1468327768560-75b778cbb551?auto=format&fit=crop&w=800&q=80",
+        image: bouquet2,
         tags: ["Birthday", "Spring", "Pastel"],
     },
     {
@@ -22,8 +24,7 @@ export const bouquets = [
         name: "Classic Romance",
         description: "Deep red roses for anniversaries and romance.",
         price: 60,
-        image:
-            "https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?auto=format&fit=crop&w=800&q=80",
-        tags: ["Love", "Luxury", "Red Roses"],
+        image: bouquet3,
+        tags: ["Love", "Luxury", "Roses"],
     },
 ]

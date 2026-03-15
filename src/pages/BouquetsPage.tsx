@@ -1,5 +1,4 @@
 import BouquetCard from "../components/bouquets/BouquetCard";
-import Card from "../components/ui/Card";
 import SectionHeading from "../components/ui/SectionHeading";
 import { bouquets } from "../data/bouquets";
 
