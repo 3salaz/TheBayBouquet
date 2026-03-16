@@ -95,6 +95,17 @@ export default function AdminRequestsPage() {
                 return "border-neutral-200 bg-white text-neutral-700"
         }
     }
+
+    function formatTimestamp(timestamp?: Timestamp) {
+        if (!timestamp) return "—"
+
+        const date = timestamp.toDate()
+
+        return date.toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+        })
+    }
     const filteredRequests =
         filter === "all"
             ? requests
@@ -115,8 +126,8 @@ export default function AdminRequestsPage() {
                             type="button"
                             onClick={() => setFilter(value)}
                             className={`rounded-full px-4 py-2 text-sm font-medium transition ${filter === value
-                                    ? "bg-rose-500 text-white"
-                                    : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
+                                ? "bg-rose-500 text-white"
+                                : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
                                 }`}
                         >
                             {value}
@@ -151,6 +162,9 @@ export default function AdminRequestsPage() {
                                     </h2>
                                     <p className="text-sm text-neutral-600">
                                         {request.customerEmail} · {request.customerPhone}
+                                    </p>
+                                    <p className="text-xs text-neutral-500 mt-1">
+                                        Submitted: {formatTimestamp(request.createdAt)}
                                     </p>
                                 </div>
 
