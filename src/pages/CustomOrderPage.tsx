@@ -18,6 +18,8 @@ export default function CustomOrderPage() {
         customerEmail: "",
     })
 
+    const [isSubmitted, setIsSubmitted] = useState(false)
+
     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) {
@@ -32,6 +34,7 @@ export default function CustomOrderPage() {
         e.preventDefault()
 
         console.log("Custom Order Request:", formData)
+        setIsSubmitted(true)
 
         // temporary reset for testing
         setFormData({
@@ -56,6 +59,12 @@ export default function CustomOrderPage() {
                 title="Custom Bouquet Request"
                 description="Tell us what you have in mind and we’ll prepare a bouquet tailored to your occasion, colors, and preferences."
             />
+
+            {isSubmitted ? (
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800">
+                    Your custom bouquet request has been submitted. We’ll review the details and follow up with you soon.
+                </div>
+            ) : null}
 
             <form onSubmit={handleSubmit} className="grid gap-6 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm md:grid-cols-2">
                 <div className="space-y-2">
