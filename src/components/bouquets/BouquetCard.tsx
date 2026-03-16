@@ -1,6 +1,8 @@
 import Card from "../ui/Card"
+import { Link } from "react-router-dom"
 
 type Props = {
+    id: string
     name: string
     description: string
     price: number
@@ -9,6 +11,7 @@ type Props = {
 }
 
 export default function BouquetCard({
+    id,
     name,
     description,
     price,
@@ -45,9 +48,12 @@ export default function BouquetCard({
                 <div className="flex items-center justify-between">
                     <p className="text-base font-semibold text-rose-600">${price}</p>
 
-                    <button className="rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
+                    <Link
+                        to={`/bouquets/${id}`}
+                        className="rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                    >
                         View Details
-                    </button>
+                    </Link>
                 </div>
             </div>
         </Card>

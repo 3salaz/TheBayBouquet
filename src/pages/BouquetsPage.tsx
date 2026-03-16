@@ -14,6 +14,7 @@ export default function BouquetsPage() {
                 {bouquets.map((bouquet) => (
                     <BouquetCard
                         key={bouquet.id}
+                        id={bouquet.id}
                         name={bouquet.name}
                         description={bouquet.description}
                         price={bouquet.price}
