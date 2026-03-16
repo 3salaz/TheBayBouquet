@@ -44,6 +44,29 @@ export default function CustomOrderPage() {
                 </div>
 
                 <div className="space-y-2">
+                    <label htmlFor="pickupTime" className="text-sm font-medium">
+                        Preferred Pickup Time
+                    </label>
+                    <input
+                        id="pickupTime"
+                        type="time"
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label htmlFor="budget" className="text-sm font-medium">
+                        Budget
+                    </label>
+                    <input
+                        id="budget"
+                        type="text"
+                        placeholder="$50 - $100"
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    />
+                </div>
+
+                <div className="space-y-2">
                     <label htmlFor="flowerTypes" className="text-sm font-medium">
                         Preferred Flower Types
                     </label>
