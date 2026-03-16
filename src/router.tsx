@@ -5,6 +5,7 @@ import BouquetsPage from "./pages/BouquetsPage"
 import CustomOrderPage from "./pages/CustomOrderPage"
 import ContactPage from "./pages/ContactPage"
 import BouquetDetailsPage from "./pages/BouquetDetailPage"
+import AdminRequestsPage from "./pages/AdminRequestsPage"
 
 export const router = createBrowserRouter([
     {
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
             { path: "custom-order", element: <CustomOrderPage /> },
             { path: "contact", element: <ContactPage /> },
             { path: "bouquets/:bouquetId", element: <BouquetDetailsPage /> },
+            { path: "admin/requests", element: <AdminRequestsPage /> },
         ],
     },
 ])
