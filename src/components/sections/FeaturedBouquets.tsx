@@ -22,6 +22,7 @@ export default function FeaturedBouquets() {
                 {bouquets.slice(0, 3).map((bouquet) => (
                     <BouquetCard
                         key={bouquet.id}
+                        id={bouquet.id}
                         name={bouquet.name}
                         description={bouquet.description}
                         price={bouquet.price}
