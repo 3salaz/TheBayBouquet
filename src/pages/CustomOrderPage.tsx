@@ -2,7 +2,8 @@ import SectionHeading from "../components/ui/SectionHeading"
 import { useState } from "react"
 
 export default function CustomOrderPage() {
-    const [formData, setFormData] = useState({
+
+    const initialFormData = {
         occasion: "",
         pickupDate: "",
         pickupTime: "",
@@ -16,7 +17,9 @@ export default function CustomOrderPage() {
         customerName: "",
         customerPhone: "",
         customerEmail: "",
-    })
+    }
+
+    const [formData, setFormData] = useState(initialFormData)
 
     const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -37,21 +40,7 @@ export default function CustomOrderPage() {
         setIsSubmitted(true)
 
         // temporary reset for testing
-        setFormData({
-            occasion: "",
-            pickupDate: "",
-            pickupTime: "",
-            flowerTypes: "",
-            flowerColors: "",
-            wrappingStyle: "",
-            quantity: "",
-            lettering: "",
-            notes: "",
-            budget: "",
-            customerName: "",
-            customerPhone: "",
-            customerEmail: "",
-        })
+        setFormData(initialFormData)
     }
     return (
         <section className="space-y-8">
@@ -74,21 +63,7 @@ export default function CustomOrderPage() {
                     <button
                         onClick={() => {
                             setIsSubmitted(false)
-                            setFormData({
-                                occasion: "",
-                                pickupDate: "",
-                                pickupTime: "",
-                                flowerTypes: "",
-                                flowerColors: "",
-                                wrappingStyle: "",
-                                quantity: "",
-                                lettering: "",
-                                notes: "",
-                                budget: "",
-                                customerName: "",
-                                customerPhone: "",
-                                customerEmail: "",
-                            })
+                            setFormData(initialFormData)
                         }}
                         className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600"
                     >
