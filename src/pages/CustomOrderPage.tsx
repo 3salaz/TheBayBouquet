@@ -27,6 +27,29 @@ export default function CustomOrderPage() {
             [id]: value,
         }))
     }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+
+        console.log("Custom Order Request:", formData)
+
+        // temporary reset for testing
+        setFormData({
+            occasion: "",
+            pickupDate: "",
+            pickupTime: "",
+            flowerTypes: "",
+            flowerColors: "",
+            wrappingStyle: "",
+            quantity: "",
+            lettering: "",
+            notes: "",
+            budget: "",
+            customerName: "",
+            customerPhone: "",
+            customerEmail: "",
+        })
+    }
     return (
         <section className="space-y-8">
             <SectionHeading
@@ -34,7 +57,7 @@ export default function CustomOrderPage() {
                 description="Tell us what you have in mind and we’ll prepare a bouquet tailored to your occasion, colors, and preferences."
             />
 
-            <form className="grid gap-6 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm md:grid-cols-2">
+            <form onSubmit={handleSubmit} className="grid gap-6 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm md:grid-cols-2">
                 <div className="space-y-2">
                     <label htmlFor="occasion" className="text-sm font-medium">
                         Occasion
@@ -149,7 +172,7 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="Small, medium, 24 roses..."
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                        value={formData.wrappingStyle}
+                        value={formData.quantity}
                         onChange={handleChange}
                     />
                 </div>
