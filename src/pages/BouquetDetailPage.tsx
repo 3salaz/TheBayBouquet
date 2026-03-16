@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { bouquets } from "../data/bouquets"
 import SectionHeading from "../components/ui/SectionHeading"
 
@@ -24,7 +24,7 @@ export default function BouquetDetailsPage() {
                 <img
                     src={bouquet.image}
                     alt={bouquet.name}
-                    className="h-[500px] w-full object-cover"
+                    className="h-125 w-full object-cover"
                 />
             </div>
 
@@ -48,6 +48,13 @@ export default function BouquetDetailsPage() {
                 <p className="text-2xl font-semibold text-rose-600">
                     ${bouquet.price}
                 </p>
+
+                <Link
+                    to={`/custom-order?bouquet=${bouquet.id}`}
+                    className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600"
+                >
+                    Order This Bouquet
+                </Link>
             </div>
         </section>
     )
