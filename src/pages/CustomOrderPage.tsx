@@ -44,7 +44,6 @@ export default function CustomOrderPage() {
                         value={formData.occasion}
                         onChange={handleChange}
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                        defaultValue=""
                     >
                         <option value="" disabled>
                             Select an occasion
@@ -68,6 +67,8 @@ export default function CustomOrderPage() {
                         id="pickupDate"
                         type="date"
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.pickupDate}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -79,6 +80,8 @@ export default function CustomOrderPage() {
                         id="pickupTime"
                         type="time"
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.pickupTime}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -91,6 +94,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="$50 - $100"
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.budget}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -103,7 +108,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="Roses, tulips, lilies..."
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                    />
+                        value={formData.flowerTypes}
+                        onChange={handleChange} />
                 </div>
 
                 <div className="space-y-2">
@@ -115,6 +121,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="Pink, white, red..."
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.flowerColors}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -127,6 +135,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="Elegant, rustic, modern..."
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.wrappingStyle}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -139,6 +149,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="Small, medium, 24 roses..."
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.wrappingStyle}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -151,6 +163,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder='Example: "Happy Birthday Mom"'
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.lettering}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -163,6 +177,8 @@ export default function CustomOrderPage() {
                         rows={5}
                         placeholder="Describe the bouquet you want, any flowers to avoid, wrapping preferences, inspiration, etc."
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.notes}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -175,6 +191,8 @@ export default function CustomOrderPage() {
                         type="text"
                         placeholder="Full name"
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.customerName}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -187,6 +205,8 @@ export default function CustomOrderPage() {
                         type="tel"
                         placeholder="(555) 555-5555"
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.customerPhone}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -199,6 +219,8 @@ export default function CustomOrderPage() {
                         type="email"
                         placeholder="email@example.com"
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                        value={formData.customerEmail}
+                        onChange={handleChange}
                     />
                 </div>
 
