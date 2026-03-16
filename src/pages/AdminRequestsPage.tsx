@@ -111,6 +111,13 @@ export default function AdminRequestsPage() {
             ? requests
             : requests.filter((request) => request.status === filter)
 
+    const requestCounts = {
+        all: requests.length,
+        new: requests.filter((request) => request.status === "new").length,
+        confirmed: requests.filter((request) => request.status === "confirmed").length,
+        ready: requests.filter((request) => request.status === "ready").length,
+        completed: requests.filter((request) => request.status === "completed").length,
+    }
     return (
         <section className="space-y-8">
             <SectionHeading
@@ -126,11 +133,11 @@ export default function AdminRequestsPage() {
                             type="button"
                             onClick={() => setFilter(value)}
                             className={`rounded-full px-4 py-2 text-sm font-medium transition ${filter === value
-                                ? "bg-rose-500 text-white"
-                                : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
+                                    ? "bg-rose-500 text-white"
+                                    : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
                                 }`}
                         >
-                            {value}
+                            {value} ({requestCounts[value]})
                         </button>
                     )
                 )}
