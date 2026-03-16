@@ -3,13 +3,16 @@ import { db } from "../../lib/firebase"
 import type { CustomOrderFormData } from "./form"
 
 export async function createCustomOrderRequest(
-    formData: CustomOrderFormData
+  formData: CustomOrderFormData
 ) {
-    const docRef = await addDoc(collection(db, "customOrderRequests"), {
-        ...formData,
-        status: "new",
-        createdAt: serverTimestamp(),
-    })
+  console.log("service hit", formData)
 
-    return docRef.id
+  const docRef = await addDoc(collection(db, "customOrderRequests"), {
+    ...formData,
+    status: "new",
+    createdAt: serverTimestamp(),
+  })
+
+  console.log("doc created with id", docRef.id)
+  return docRef.id
 }

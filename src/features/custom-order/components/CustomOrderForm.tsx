@@ -26,34 +26,38 @@ export default function CustomOrderForm() {
     }
 
     async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-        e.preventDefault()
+  e.preventDefault()
 
-        if (
-            !formData.occasion ||
-            !formData.pickupDate ||
-            !formData.customerName ||
-            !formData.customerPhone ||
-            !formData.customerEmail
-        ) {
-            setError("Please fill in the required fields before submitting.")
-            return
-        }
+  if (
+    !formData.occasion ||
+    !formData.pickupDate ||
+    !formData.customerName ||
+    !formData.customerPhone ||
+    !formData.customerEmail
+  ) {
+    setError("Please fill in the required fields before submitting.")
+    return
+  }
 
-        try {
-            setError(null)
-            setIsSubmitting(true)
+  try {
+    console.log("submit started")
+    setError(null)
+    setIsSubmitting(true)
 
-            await createCustomOrderRequest(formData)
+    console.log("about to create request")
+    const id = await createCustomOrderRequest(formData)
+    console.log("request created:", id)
 
-            setIsSubmitted(true)
-            setFormData(initialCustomOrderFormData)
-        } catch (err) {
-            console.error("Failed to submit custom order request:", err)
-            setError("Something went wrong while submitting your request. Please try again.")
-        } finally {
-            setIsSubmitting(false)
-        }
-    }
+    setIsSubmitted(true)
+    setFormData(initialCustomOrderFormData)
+  } catch (err) {
+    console.error("Failed to submit custom order request:", err)
+    setError("Something went wrong while submitting your request. Please try again.")
+  } finally {
+    console.log("submit finished")
+    setIsSubmitting(false)
+  }
+}
 
     if (isSubmitted) {
         return (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import {
     collection,
-    getDocs,
+    onSnapshot,
     orderBy,
     query,
     Timestamp,
@@ -34,33 +34,30 @@ export default function AdminRequestsPage() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        async function fetchRequests() {
-            try {
-                setLoading(true)
-                setError(null)
+        const q = query(
+            collection(db, "customOrderRequests"),
+            orderBy("createdAt", "desc")
+        )
 
-                const q = query(
-                    collection(db, "customOrderRequests"),
-                    orderBy("createdAt", "desc")
-                )
-
-                const snapshot = await getDocs(q)
-
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
                 const data = snapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
                 })) as CustomOrderRequest[]
 
                 setRequests(data)
-            } catch (err) {
+                setLoading(false)
+            },
+            (err) => {
                 console.error("Failed to load custom order requests:", err)
                 setError("Failed to load requests.")
-            } finally {
                 setLoading(false)
             }
-        }
+        )
 
-        fetchRequests()
+        return () => unsubscribe()
     }, [])
 
     return (
