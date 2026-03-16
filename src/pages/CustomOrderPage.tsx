@@ -115,6 +115,42 @@ export default function CustomOrderPage() {
                     />
                 </div>
 
+                <div className="space-y-2">
+                    <label htmlFor="customerName" className="text-sm font-medium">
+                        Your Name
+                    </label>
+                    <input
+                        id="customerName"
+                        type="text"
+                        placeholder="Full name"
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label htmlFor="customerPhone" className="text-sm font-medium">
+                        Phone Number
+                    </label>
+                    <input
+                        id="customerPhone"
+                        type="tel"
+                        placeholder="(555) 555-5555"
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                    <label htmlFor="customerEmail" className="text-sm font-medium">
+                        Email Address
+                    </label>
+                    <input
+                        id="customerEmail"
+                        type="email"
+                        placeholder="email@example.com"
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    />
+                </div>
+
                 <div className="md:col-span-2">
                     <button
                         type="submit"
