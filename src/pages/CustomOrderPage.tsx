@@ -1,39 +1,20 @@
-import { useMemo } from "react"
-import { useSearchParams } from "react-router-dom"
 import SectionHeading from "../components/ui/SectionHeading"
-import { bouquets } from "../data/bouquets"
 
 export default function CustomOrderPage() {
-    const [searchParams] = useSearchParams()
-    const bouquetId = searchParams.get("bouquet")
-
-    const selectedBouquet = useMemo(() => {
-        return bouquets.find((bouquet) => bouquet.id === bouquetId) ?? null
-    }, [bouquetId])
-
     return (
-        <section className="space-y-6">
+        <section className="space-y-8">
             <SectionHeading
-                title="Custom Order"
-                description="Request a bouquet tailored to the occasion, color palette, and budget."
+                title="Custom Bouquet Request"
+                description="Tell us what you have in mind and we’ll prepare a bouquet tailored to your occasion, colors, and preferences."
             />
 
-            {selectedBouquet ? (
-                <div className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
-                    <p className="text-sm uppercase tracking-[0.2em] text-rose-500">
-                        Selected bouquet
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold">{selectedBouquet.name}</h2>
-                    <p className="mt-2 text-neutral-600">{selectedBouquet.description}</p>
-                    <p className="mt-3 font-medium text-rose-600">${selectedBouquet.price}</p>
-                </div>
-            ) : (
-                <div className="rounded-2xl border border-dashed border-rose-200 bg-rose-50/50 p-5">
-                    <p className="text-neutral-600">
-                        No bouquet selected yet. You can still submit a custom request.
-                    </p>
-                </div>
-            )}
+            <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
+                <p className="text-sm text-neutral-600">
+                    This form will allow customers to request a completely custom bouquet.
+                    We'll add fields for occasion, flower preferences, wrapping style,
+                    pickup date, and message details next.
+                </p>
+            </div>
         </section>
     )
 }
