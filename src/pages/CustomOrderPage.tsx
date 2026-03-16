@@ -1,6 +1,32 @@
 import SectionHeading from "../components/ui/SectionHeading"
+import { useState } from "react"
 
 export default function CustomOrderPage() {
+    const [formData, setFormData] = useState({
+        occasion: "",
+        pickupDate: "",
+        pickupTime: "",
+        flowerTypes: "",
+        flowerColors: "",
+        wrappingStyle: "",
+        quantity: "",
+        lettering: "",
+        notes: "",
+        budget: "",
+        customerName: "",
+        customerPhone: "",
+        customerEmail: "",
+    })
+
+    function handleChange(
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) {
+        const { id, value } = e.target
+        setFormData((prev) => ({
+            ...prev,
+            [id]: value,
+        }))
+    }
     return (
         <section className="space-y-8">
             <SectionHeading
@@ -15,6 +41,8 @@ export default function CustomOrderPage() {
                     </label>
                     <select
                         id="occasion"
+                        value={formData.occasion}
+                        onChange={handleChange}
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         defaultValue=""
                     >
