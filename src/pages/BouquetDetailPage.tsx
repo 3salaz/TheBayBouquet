@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { bouquets } from "../data/bouquets"
 import SectionHeading from "../components/ui/SectionHeading"
 
@@ -49,12 +49,12 @@ export default function BouquetDetailsPage() {
                     ${bouquet.price}
                 </p>
 
-                <Link
-                    to={`/custom-order?bouquet=${bouquet.id}`}
+                <button
+                    type="button"
                     className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600"
                 >
-                    Order This Bouquet
-                </Link>
+                    Add to Cart
+                </button>
             </div>
         </section>
     )
