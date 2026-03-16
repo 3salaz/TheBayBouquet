@@ -10,6 +10,9 @@ import SectionHeading from "../components/ui/SectionHeading"
 import { db } from "../lib/firebase"
 import { updateCustomOrderStatus } from "../features/custom-order/admin-service"
 
+type CustomOrderStatus = "new" | "confirmed" | "ready" | "completed"
+type RequestFilter = "all" | CustomOrderStatus
+
 type CustomOrderRequest = {
     id: string
     occasion: string
@@ -25,7 +28,7 @@ type CustomOrderRequest = {
     customerName: string
     customerPhone: string
     customerEmail: string
-    status: string
+    status: CustomOrderStatus
     createdAt?: Timestamp
 }
 
@@ -34,6 +37,7 @@ export default function AdminRequestsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const [filter, setFilter] = useState<RequestFilter>("all")
 
     useEffect(() => {
         const q = query(
@@ -64,7 +68,7 @@ export default function AdminRequestsPage() {
 
     async function handleStatusChange(
         requestId: string,
-        status: "new" | "confirmed" | "ready" | "completed"
+        status: CustomOrderStatus
     ) {
         try {
             setUpdatingId(requestId)
@@ -77,12 +81,49 @@ export default function AdminRequestsPage() {
         }
     }
 
+    function getStatusClasses(status: "new" | "confirmed" | "ready" | "completed") {
+        switch (status) {
+            case "new":
+                return "border-yellow-200 bg-yellow-50 text-yellow-700"
+            case "confirmed":
+                return "border-blue-200 bg-blue-50 text-blue-700"
+            case "ready":
+                return "border-purple-200 bg-purple-50 text-purple-700"
+            case "completed":
+                return "border-green-200 bg-green-50 text-green-700"
+            default:
+                return "border-neutral-200 bg-white text-neutral-700"
+        }
+    }
+    const filteredRequests =
+        filter === "all"
+            ? requests
+            : requests.filter((request) => request.status === filter)
+
     return (
         <section className="space-y-8">
             <SectionHeading
                 title="Admin Requests"
                 description="Review incoming custom bouquet requests."
             />
+
+            <div className="flex flex-wrap gap-2">
+                {(["all", "new", "confirmed", "ready", "completed"] as RequestFilter[]).map(
+                    (value) => (
+                        <button
+                            key={value}
+                            type="button"
+                            onClick={() => setFilter(value)}
+                            className={`rounded-full px-4 py-2 text-sm font-medium transition ${filter === value
+                                    ? "bg-rose-500 text-white"
+                                    : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
+                                }`}
+                        >
+                            {value}
+                        </button>
+                    )
+                )}
+            </div>
 
             {loading ? (
                 <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
@@ -92,13 +133,13 @@ export default function AdminRequestsPage() {
                 <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
                     {error}
                 </div>
-            ) : requests.length === 0 ? (
+            ) : filteredRequests.length === 0 ? (
                 <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
                     No requests yet.
                 </div>
             ) : (
                 <div className="grid gap-4">
-                    {requests.map((request) => (
+                    {filteredRequests.map((request) => (
                         <div
                             key={request.id}
                             className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
@@ -122,7 +163,9 @@ export default function AdminRequestsPage() {
                                         )
                                     }
                                     disabled={updatingId === request.id}
-                                    className="rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-rose-700 outline-none disabled:opacity-60"
+                                    className={`rounded-full border px-3 py-1 text-xs font-medium outline-none disabled:opacity-60 ${getStatusClasses(
+                                        request.status
+                                    )}`}
                                 >
                                     <option value="new">new</option>
                                     <option value="confirmed">confirmed</option>
