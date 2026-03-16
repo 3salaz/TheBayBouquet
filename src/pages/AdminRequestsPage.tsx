@@ -38,6 +38,7 @@ export default function AdminRequestsPage() {
     const [error, setError] = useState<string | null>(null)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [filter, setFilter] = useState<RequestFilter>("all")
+    const [search, setSearch] = useState("")
 
     useEffect(() => {
         const q = query(
@@ -106,10 +107,6 @@ export default function AdminRequestsPage() {
             timeStyle: "short",
         })
     }
-    const filteredRequests =
-        filter === "all"
-            ? requests
-            : requests.filter((request) => request.status === filter)
 
     const requestCounts = {
         all: requests.length,
@@ -118,6 +115,19 @@ export default function AdminRequestsPage() {
         ready: requests.filter((request) => request.status === "ready").length,
         completed: requests.filter((request) => request.status === "completed").length,
     }
+
+    const filteredRequests = requests.filter((request) => {
+        const matchesFilter = filter === "all" || request.status === filter
+
+        const searchValue = search.trim().toLowerCase()
+        const matchesSearch =
+            !searchValue ||
+            request.customerName.toLowerCase().includes(searchValue) ||
+            request.customerEmail.toLowerCase().includes(searchValue) ||
+            request.customerPhone.toLowerCase().includes(searchValue)
+
+        return matchesFilter && matchesSearch
+    })
     return (
         <section className="space-y-8">
             <SectionHeading
@@ -133,14 +143,24 @@ export default function AdminRequestsPage() {
                             type="button"
                             onClick={() => setFilter(value)}
                             className={`rounded-full px-4 py-2 text-sm font-medium transition ${filter === value
-                                    ? "bg-rose-500 text-white"
-                                    : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
+                                ? "bg-rose-500 text-white"
+                                : "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
                                 }`}
                         >
                             {value} ({requestCounts[value]})
                         </button>
                     )
                 )}
+            </div>
+
+            <div>
+                <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name, email, or phone"
+                    className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm outline-none focus:border-rose-400 md:max-w-md"
+                />
             </div>
 
             {loading ? (
