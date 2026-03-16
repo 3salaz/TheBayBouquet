@@ -32,11 +32,38 @@ type CustomOrderRequest = {
     createdAt?: Timestamp
 }
 
+function getStatusClasses(status: CustomOrderStatus) {
+    switch (status) {
+        case "new":
+            return "border-yellow-200 bg-yellow-50 text-yellow-700"
+        case "confirmed":
+            return "border-blue-200 bg-blue-50 text-blue-700"
+        case "ready":
+            return "border-purple-200 bg-purple-50 text-purple-700"
+        case "completed":
+            return "border-green-200 bg-green-50 text-green-700"
+        default:
+            return "border-neutral-200 bg-white text-neutral-700"
+    }
+}
+
+function formatTimestamp(timestamp?: Timestamp) {
+    if (!timestamp) return "—"
+
+    const date = timestamp.toDate()
+
+    return date.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    })
+}
+
 export default function AdminRequestsPage() {
     const [requests, setRequests] = useState<CustomOrderRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+
     const [filter, setFilter] = useState<RequestFilter>("all")
     const [search, setSearch] = useState("")
 
@@ -82,44 +109,11 @@ export default function AdminRequestsPage() {
         }
     }
 
-    function getStatusClasses(status: "new" | "confirmed" | "ready" | "completed") {
-        switch (status) {
-            case "new":
-                return "border-yellow-200 bg-yellow-50 text-yellow-700"
-            case "confirmed":
-                return "border-blue-200 bg-blue-50 text-blue-700"
-            case "ready":
-                return "border-purple-200 bg-purple-50 text-purple-700"
-            case "completed":
-                return "border-green-200 bg-green-50 text-green-700"
-            default:
-                return "border-neutral-200 bg-white text-neutral-700"
-        }
-    }
-
-    function formatTimestamp(timestamp?: Timestamp) {
-        if (!timestamp) return "—"
-
-        const date = timestamp.toDate()
-
-        return date.toLocaleString(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short",
-        })
-    }
-
-    const requestCounts = {
-        all: requests.length,
-        new: requests.filter((request) => request.status === "new").length,
-        confirmed: requests.filter((request) => request.status === "confirmed").length,
-        ready: requests.filter((request) => request.status === "ready").length,
-        completed: requests.filter((request) => request.status === "completed").length,
-    }
-
     const filteredRequests = requests.filter((request) => {
         const matchesFilter = filter === "all" || request.status === filter
 
         const searchValue = search.trim().toLowerCase()
+
         const matchesSearch =
             !searchValue ||
             request.customerName.toLowerCase().includes(searchValue) ||
@@ -128,6 +122,18 @@ export default function AdminRequestsPage() {
 
         return matchesFilter && matchesSearch
     })
+
+    const newRequests = filteredRequests.filter((r) => r.status === "new")
+    const otherRequests = filteredRequests.filter((r) => r.status !== "new")
+
+    const requestCounts = {
+        all: requests.length,
+        new: requests.filter((r) => r.status === "new").length,
+        confirmed: requests.filter((r) => r.status === "confirmed").length,
+        ready: requests.filter((r) => r.status === "ready").length,
+        completed: requests.filter((r) => r.status === "completed").length,
+    }
+
     return (
         <section className="space-y-8">
             <SectionHeading
@@ -176,86 +182,155 @@ export default function AdminRequestsPage() {
                     No requests yet.
                 </div>
             ) : (
-                <div className="grid gap-4">
-                    {filteredRequests.map((request) => (
-                        <div
-                            key={request.id}
-                            className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
-                        >
-                            <div className="flex flex-wrap items-start justify-between gap-4">
-                                <div>
-                                    <h2 className="text-xl font-semibold">
-                                        {request.customerName}
-                                    </h2>
-                                    <p className="text-sm text-neutral-600">
-                                        {request.customerEmail} · {request.customerPhone}
-                                    </p>
-                                    <p className="text-xs text-neutral-500 mt-1">
-                                        Submitted: {formatTimestamp(request.createdAt)}
-                                    </p>
-                                </div>
+                <>
+                    {filter === "all" && newRequests.length > 0 && (
+                        <div className="space-y-4">
+                            <h2 className="text-lg font-semibold text-rose-600">
+                                New Requests ({newRequests.length})
+                            </h2>
 
-                                <select
-                                    value={request.status}
-                                    onChange={(e) =>
-                                        handleStatusChange(
-                                            request.id,
-                                            e.target.value as "new" | "confirmed" | "ready" | "completed"
-                                        )
-                                    }
-                                    disabled={updatingId === request.id}
-                                    className={`rounded-full border px-3 py-1 text-xs font-medium outline-none disabled:opacity-60 ${getStatusClasses(
-                                        request.status
-                                    )}`}
-                                >
-                                    <option value="new">new</option>
-                                    <option value="confirmed">confirmed</option>
-                                    <option value="ready">ready</option>
-                                    <option value="completed">completed</option>
-                                </select>
+                            <div className="grid gap-4">
+                                {newRequests.map((request) => (
+                                    <div
+                                        key={`new-${request.id}`}
+                                        className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 shadow-sm"
+                                    >
+                                        <p className="mb-2 text-sm font-medium text-yellow-700">
+                                            Needs review
+                                        </p>
+
+                                        <p className="font-semibold">{request.customerName}</p>
+
+                                        <p className="text-sm text-neutral-600">
+                                            {request.customerEmail} · {request.customerPhone}
+                                        </p>
+
+                                        <p className="mt-2 text-sm">
+                                            <span className="font-medium">Occasion:</span>{" "}
+                                            {request.occasion}
+                                        </p>
+
+                                        <p className="text-sm">
+                                            <span className="font-medium">Pickup:</span>{" "}
+                                            {request.pickupDate}
+                                        </p>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleStatusChange(request.id, "confirmed")}
+                                            disabled={updatingId === request.id}
+                                            className="mt-4 inline-flex items-center justify-center rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600 disabled:opacity-60"
+                                        >
+                                            {updatingId === request.id ? "Confirming..." : "Confirm Order"}
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
-
-                            <div className="mt-4 grid gap-3 md:grid-cols-2">
-                                <p>
-                                    <span className="font-medium">Occasion:</span> {request.occasion}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Pickup Date:</span> {request.pickupDate}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Pickup Time:</span> {request.pickupTime || "—"}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Budget:</span> {request.budget || "—"}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Flower Types:</span> {request.flowerTypes || "—"}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Colors:</span> {request.flowerColors || "—"}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Wrapping:</span> {request.wrappingStyle || "—"}
-                                </p>
-                                <p>
-                                    <span className="font-medium">Size / Quantity:</span> {request.quantity || "—"}
-                                </p>
-                            </div>
-
-                            {request.lettering ? (
-                                <p className="mt-4">
-                                    <span className="font-medium">Lettering:</span> {request.lettering}
-                                </p>
-                            ) : null}
-
-                            {request.notes ? (
-                                <p className="mt-2 text-neutral-700">
-                                    <span className="font-medium">Notes:</span> {request.notes}
-                                </p>
-                            ) : null}
                         </div>
-                    ))}
-                </div>
+                    )}
+
+                    <div className="grid gap-4">
+                        {(filter === "all" ? otherRequests : filteredRequests).map(
+                            (request) => (
+                                <div
+                                    key={request.id}
+                                    className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
+                                >
+                                    <div className="flex flex-wrap items-start justify-between gap-4">
+                                        <div>
+                                            <h2 className="text-xl font-semibold">
+                                                {request.customerName}
+                                            </h2>
+
+                                            <p className="text-sm text-neutral-600">
+                                                {request.customerEmail} · {request.customerPhone}
+                                            </p>
+
+                                            <p className="mt-1 text-xs text-neutral-500">
+                                                Submitted: {formatTimestamp(request.createdAt)}
+                                            </p>
+                                        </div>
+
+                                        <select
+                                            value={request.status}
+                                            onChange={(e) =>
+                                                handleStatusChange(
+                                                    request.id,
+                                                    e.target.value as CustomOrderStatus
+                                                )
+                                            }
+                                            disabled={updatingId === request.id}
+                                            className={`rounded-full border px-3 py-1 text-xs font-medium outline-none disabled:opacity-60 ${getStatusClasses(
+                                                request.status
+                                            )}`}
+                                        >
+                                            <option value="new">new</option>
+                                            <option value="confirmed">confirmed</option>
+                                            <option value="ready">ready</option>
+                                            <option value="completed">completed</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                        <p>
+                                            <span className="font-medium">Occasion:</span>{" "}
+                                            {request.occasion}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Pickup Date:</span>{" "}
+                                            {request.pickupDate}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Pickup Time:</span>{" "}
+                                            {request.pickupTime || "—"}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Budget:</span>{" "}
+                                            {request.budget || "—"}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Flower Types:</span>{" "}
+                                            {request.flowerTypes || "—"}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Colors:</span>{" "}
+                                            {request.flowerColors || "—"}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Wrapping:</span>{" "}
+                                            {request.wrappingStyle || "—"}
+                                        </p>
+
+                                        <p>
+                                            <span className="font-medium">Size / Quantity:</span>{" "}
+                                            {request.quantity || "—"}
+                                        </p>
+                                    </div>
+
+                                    {request.lettering && (
+                                        <p className="mt-4">
+                                            <span className="font-medium">Lettering:</span>{" "}
+                                            {request.lettering}
+                                        </p>
+                                    )}
+
+                                    {request.notes && (
+                                        <p className="mt-2 text-neutral-700">
+                                            <span className="font-medium">Notes:</span>{" "}
+                                            {request.notes}
+                                        </p>
+                                    )}
+                                </div>
+                            )
+                        )}
+                    </div>
+                </>
             )}
         </section>
     )
