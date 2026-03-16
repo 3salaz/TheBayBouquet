@@ -12,6 +12,7 @@ export default function CustomOrderForm() {
     )
 
     const [isSubmitted, setIsSubmitted] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     function handleChange(
@@ -40,6 +41,7 @@ export default function CustomOrderForm() {
 
         try {
             setError(null)
+            setIsSubmitting(true)
 
             await createCustomOrderRequest(formData)
 
@@ -48,6 +50,8 @@ export default function CustomOrderForm() {
         } catch (err) {
             console.error("Failed to submit custom order request:", err)
             setError("Something went wrong while submitting your request. Please try again.")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -285,9 +289,10 @@ export default function CustomOrderForm() {
                 <div className="md:col-span-2">
                     <button
                         type="submit"
-                        className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600"
+                        disabled={isSubmitting}
+                        className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600 disabled:opacity-60"
                     >
-                        Submit Request
+                        {isSubmitting ? "Submitting..." : "Submit Request"}
                     </button>
                 </div>
             </form>
