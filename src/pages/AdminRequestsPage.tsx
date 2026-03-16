@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore"
 import SectionHeading from "../components/ui/SectionHeading"
 import { db } from "../lib/firebase"
+import { updateCustomOrderStatus } from "../features/custom-order/admin-service"
 
 type CustomOrderRequest = {
     id: string
@@ -32,6 +33,7 @@ export default function AdminRequestsPage() {
     const [requests, setRequests] = useState<CustomOrderRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [updatingId, setUpdatingId] = useState<string | null>(null)
 
     useEffect(() => {
         const q = query(
@@ -59,6 +61,21 @@ export default function AdminRequestsPage() {
 
         return () => unsubscribe()
     }, [])
+
+    async function handleStatusChange(
+        requestId: string,
+        status: "new" | "confirmed" | "ready" | "completed"
+    ) {
+        try {
+            setUpdatingId(requestId)
+            await updateCustomOrderStatus(requestId, status)
+        } catch (err) {
+            console.error("Failed to update request status:", err)
+            setError("Failed to update request status.")
+        } finally {
+            setUpdatingId(null)
+        }
+    }
 
     return (
         <section className="space-y-8">
@@ -96,9 +113,22 @@ export default function AdminRequestsPage() {
                                     </p>
                                 </div>
 
-                                <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-700">
-                                    {request.status}
-                                </span>
+                                <select
+                                    value={request.status}
+                                    onChange={(e) =>
+                                        handleStatusChange(
+                                            request.id,
+                                            e.target.value as "new" | "confirmed" | "ready" | "completed"
+                                        )
+                                    }
+                                    disabled={updatingId === request.id}
+                                    className="rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-rose-700 outline-none disabled:opacity-60"
+                                >
+                                    <option value="new">new</option>
+                                    <option value="confirmed">confirmed</option>
+                                    <option value="ready">ready</option>
+                                    <option value="completed">completed</option>
+                                </select>
                             </div>
 
                             <div className="mt-4 grid gap-3 md:grid-cols-2">
