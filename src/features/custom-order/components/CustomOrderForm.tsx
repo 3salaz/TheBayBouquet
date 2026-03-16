@@ -5,10 +5,10 @@ import {
 } from "../form"
 
 export default function CustomOrderForm() {
-
     const [formData, setFormData] = useState<CustomOrderFormData>(
         initialCustomOrderFormData
     )
+
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -69,24 +69,25 @@ export default function CustomOrderForm() {
         )
     }
 
-
-
     return (
         <>
-            {
-                error && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                        {error}
-                    </div>
-                )
-            }
+            <p className="text-sm text-neutral-500">
+                Fields marked with <span className="text-rose-500">*</span> are required.
+            </p>
+
+            {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {error}
+                </div>
+            )}
+
             <form
                 onSubmit={handleSubmit}
                 className="grid gap-6 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm md:grid-cols-2"
             >
                 <div className="space-y-2">
                     <label htmlFor="occasion" className="text-sm font-medium">
-                        Occasion
+                        Occasion <span className="text-rose-500">*</span>
                     </label>
                     <select
                         id="occasion"
@@ -110,7 +111,7 @@ export default function CustomOrderForm() {
 
                 <div className="space-y-2">
                     <label htmlFor="pickupDate" className="text-sm font-medium">
-                        Pickup Date
+                        Pickup Date <span className="text-rose-500">*</span>
                     </label>
                     <input
                         id="pickupDate"
@@ -234,7 +235,7 @@ export default function CustomOrderForm() {
 
                 <div className="space-y-2">
                     <label htmlFor="customerName" className="text-sm font-medium">
-                        Your Name
+                        Your Name <span className="text-rose-500">*</span>
                     </label>
                     <input
                         id="customerName"
@@ -248,7 +249,7 @@ export default function CustomOrderForm() {
 
                 <div className="space-y-2">
                     <label htmlFor="customerPhone" className="text-sm font-medium">
-                        Phone Number
+                        Phone Number <span className="text-rose-500">*</span>
                     </label>
                     <input
                         id="customerPhone"
@@ -262,7 +263,7 @@ export default function CustomOrderForm() {
 
                 <div className="space-y-2 md:col-span-2">
                     <label htmlFor="customerEmail" className="text-sm font-medium">
-                        Email Address
+                        Email Address <span className="text-rose-500">*</span>
                     </label>
                     <input
                         id="customerEmail"
