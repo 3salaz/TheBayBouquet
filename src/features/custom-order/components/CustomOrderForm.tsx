@@ -4,6 +4,8 @@ import {
     type CustomOrderFormData,
 } from "../form"
 
+import { createCustomOrderRequest } from "../service"
+
 export default function CustomOrderForm() {
     const [formData, setFormData] = useState<CustomOrderFormData>(
         initialCustomOrderFormData
@@ -22,7 +24,7 @@ export default function CustomOrderForm() {
         }))
     }
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
         e.preventDefault()
 
         if (
@@ -36,12 +38,17 @@ export default function CustomOrderForm() {
             return
         }
 
-        setError(null)
+        try {
+            setError(null)
 
-        console.log("Custom Order Request:", formData)
+            await createCustomOrderRequest(formData)
 
-        setIsSubmitted(true)
-        setFormData(initialCustomOrderFormData)
+            setIsSubmitted(true)
+            setFormData(initialCustomOrderFormData)
+        } catch (err) {
+            console.error("Failed to submit custom order request:", err)
+            setError("Something went wrong while submitting your request. Please try again.")
+        }
     }
 
     if (isSubmitted) {
