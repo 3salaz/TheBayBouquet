@@ -60,6 +60,8 @@ export default function CustomOrderForm() {
     )
   }
 
+  const availabilitySettings = settings
+
   const availablePickupTimes = useMemo(
     () => getAvailablePickupTimes(formData.pickupDate, settings),
     [formData.pickupDate, settings]
@@ -82,7 +84,7 @@ export default function CustomOrderForm() {
     async function checkCapacity() {
       if (
         !formData.pickupDate ||
-        !isPickupDateAllowed(formData.pickupDate, settings)
+        !isPickupDateAllowed(formData.pickupDate, availabilitySettings)
       ) {
         setConfirmedOrderCount(0)
         return
@@ -132,7 +134,7 @@ export default function CustomOrderForm() {
           }
         }
 
-        if (!isPickupDateAllowed(value, settings)) {
+        if (!isPickupDateAllowed(value, availabilitySettings)) {
           setPickupDateError(
             "That pickup date is not available. Please choose a future operating day."
           )
@@ -202,7 +204,7 @@ export default function CustomOrderForm() {
       return
     }
 
-    if (!isPickupDateAllowed(formData.pickupDate, settings)) {
+    if (!isPickupDateAllowed(formData.pickupDate, availabilitySettings)) {
       setError("Please choose a valid pickup date based on current availability.")
       return
     }
