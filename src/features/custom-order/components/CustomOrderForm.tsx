@@ -111,6 +111,19 @@ export default function CustomOrderForm() {
             return
         }
 
+        if (id === "flowerTypes" && e.target instanceof HTMLInputElement) {
+            const { checked } = e.target
+
+            setFormData((prev) => ({
+                ...prev,
+                flowerTypes: checked
+                    ? [...prev.flowerTypes, value]
+                    : prev.flowerTypes.filter((type) => type !== value),
+            }))
+
+            return
+        }
+
         setFormData((prev) => ({
             ...prev,
             [id]: value,
@@ -327,6 +340,39 @@ export default function CustomOrderForm() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Preferred Flower Types</label>
+
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {[
+                            "Roses",
+                            "Tulips",
+                            "Lilies",
+                            "Sunflowers",
+                            "Orchids",
+                            "Carnations",
+                            "Daisies",
+                            "Mixed Bouquet",
+                            "Designer’s Choice",
+                        ].map((type) => (
+                            <label
+                                key={type}
+                                className="flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    id="flowerTypes"
+                                    value={type}
+                                    checked={formData.flowerTypes.includes(type)}
+                                    onChange={handleChange}
+                                    className="h-4 w-4"
+                                />
+                                <span>{type}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium">Preferred Colors</label>
 
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -338,7 +384,6 @@ export default function CustomOrderForm() {
                             "Orange",
                             "Purple",
                             "Blue",
-                            "Green",
                             "Pastel",
                             "Neutral",
                         ].map((color) => (
@@ -361,45 +406,40 @@ export default function CustomOrderForm() {
                 </div>
 
                 <div className="space-y-2">
-                    <label htmlFor="flowerColors" className="text-sm font-medium">
-                        Preferred Colors
-                    </label>
-                    <input
-                        id="flowerColors"
-                        type="text"
-                        placeholder="Pink, white, red..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                        value={formData.flowerColors}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div className="space-y-2">
                     <label htmlFor="wrappingStyle" className="text-sm font-medium">
                         Wrapping Style
                     </label>
-                    <input
+                    <select
                         id="wrappingStyle"
-                        type="text"
-                        placeholder="Elegant, rustic, modern..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.wrappingStyle}
                         onChange={handleChange}
-                    />
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    >
+                        <option value="">Select a wrapping style</option>
+                        <option value="classic">Classic</option>
+                        <option value="elegant">Elegant</option>
+                        <option value="modern">Modern</option>
+                        <option value="rustic">Rustic</option>
+                        <option value="luxury">Luxury</option>
+                        <option value="designer-choice">Designer’s Choice</option>
+                    </select>
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="quantity" className="text-sm font-medium">
-                        Bouquet Size / Amount of Flowers
+                        Bouquet Size
                     </label>
-                    <input
+                    <select
                         id="quantity"
-                        type="text"
-                        placeholder="Small, medium, 24 roses..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.quantity}
                         onChange={handleChange}
-                    />
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    >
+                        <option value="">Select a bouquet size</option>
+                        <option value="24-stems">24 stems</option>
+                        <option value="36-stems">36 stems</option>
+                        <option value="custom">Custom</option>
+                    </select>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
