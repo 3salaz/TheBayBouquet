@@ -27,6 +27,7 @@ export default function CustomOrderForm() {
     const [error, setError] = useState<string | null>(null)
     const [confirmedOrderCount, setConfirmedOrderCount] = useState(0)
     const [isCheckingCapacity, setIsCheckingCapacity] = useState(false)
+    const [pickupDateError, setPickupDateError] = useState<string | null>(null)
 
     const availablePickupTimes = useMemo(
         () => getAvailablePickupTimes(formData.pickupDate),
@@ -65,6 +66,28 @@ export default function CustomOrderForm() {
 
         setFormData((prev) => {
             if (id === "pickupDate") {
+                if (!value) {
+                    setPickupDateError(null)
+                    return {
+                        ...prev,
+                        pickupDate: "",
+                        pickupTime: "",
+                    }
+                }
+
+                if (!isPickupDateAllowed(value)) {
+                    setPickupDateError(
+                        "That pickup date is not available. Please choose a future operating day."
+                    )
+                    return {
+                        ...prev,
+                        pickupDate: "",
+                        pickupTime: "",
+                    }
+                }
+
+                setPickupDateError(null)
+
                 return {
                     ...prev,
                     pickupDate: value,
@@ -111,6 +134,7 @@ export default function CustomOrderForm() {
         try {
             console.log("submit started")
             setError(null)
+            setPickupDateError(null)
             setIsSubmitting(true)
 
             console.log("about to create request")
@@ -207,9 +231,9 @@ export default function CustomOrderForm() {
                         onChange={handleChange}
                     />
 
-                    {formData.pickupDate && !isPickupDateAllowed(formData.pickupDate) && (
+                    {pickupDateError && (
                         <p className="text-sm text-red-600">
-                            That pickup date is not available. Please choose a valid future operating day.
+                            {pickupDateError}
                         </p>
                     )}
 
