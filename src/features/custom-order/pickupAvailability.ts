@@ -6,6 +6,10 @@ export type PickupAvailabilityConfig = {
   maxConfirmedOrdersPerDay: number
 }
 
+export function isDateAtCapacity(confirmedCount: number) {
+  return confirmedCount >= pickupAvailabilityConfig.maxConfirmedOrdersPerDay
+}
+
 export const pickupAvailabilityConfig: PickupAvailabilityConfig = {
   operatingDays: [2, 3, 4, 5, 6], // Tuesday-Saturday
   closedDates: [],

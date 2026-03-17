@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
     initialCustomOrderFormData,
     type CustomOrderFormData,
@@ -9,7 +9,10 @@ import {
     getTodayDateString,
     isPickupDateAllowed,
     isRushDate,
+    isDateAtCapacity
 } from "../pickupAvailability"
+
+import { getConfirmedOrderCountForDate } from "../availabilityService"
 
 import { createCustomOrderRequest } from "../service"
 import { formatTime } from "../utils"
@@ -22,6 +25,8 @@ export default function CustomOrderForm() {
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [confirmedOrderCount, setConfirmedOrderCount] = useState(0)
+    const [isCheckingCapacity, setIsCheckingCapacity] = useState(false)
 
     const availablePickupTimes = useMemo(
         () => getAvailablePickupTimes(formData.pickupDate),
@@ -29,6 +34,29 @@ export default function CustomOrderForm() {
     )
 
     const showRushNotice = isRushDate(formData.pickupDate)
+    const isSelectedDateFull = isDateAtCapacity(confirmedOrderCount)
+
+    useEffect(() => {
+        async function checkCapacity() {
+            if (!formData.pickupDate || !isPickupDateAllowed(formData.pickupDate)) {
+                setConfirmedOrderCount(0)
+                return
+            }
+
+            try {
+                setIsCheckingCapacity(true)
+                const count = await getConfirmedOrderCountForDate(formData.pickupDate)
+                setConfirmedOrderCount(count)
+            } catch (err) {
+                console.error("Failed to check pickup date capacity:", err)
+                setConfirmedOrderCount(0)
+            } finally {
+                setIsCheckingCapacity(false)
+            }
+        }
+
+        checkCapacity()
+    }, [formData.pickupDate])
 
     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -72,6 +100,11 @@ export default function CustomOrderForm() {
 
         if (formData.pickupTime && !availablePickupTimes.includes(formData.pickupTime)) {
             setError("Please choose a valid pickup time for the selected date.")
+            return
+        }
+
+        if (isSelectedDateFull) {
+            setError("That pickup date is fully booked. Please choose another date.")
             return
         }
 
@@ -185,6 +218,20 @@ export default function CustomOrderForm() {
                             This is a rush request. Orders within the next 3 days may cost more and will need confirmation.
                         </p>
                     )}
+                    {formData.pickupDate && isCheckingCapacity && (
+                        <p className="text-sm text-neutral-500">
+                            Checking pickup availability...
+                        </p>
+                    )}
+
+                    {formData.pickupDate &&
+                        !isCheckingCapacity &&
+                        isPickupDateAllowed(formData.pickupDate) &&
+                        isSelectedDateFull && (
+                            <p className="text-sm text-red-600">
+                                That date is fully booked. Please choose another pickup date.
+                            </p>
+                        )}
                 </div>
 
                 <div className="space-y-2">
@@ -195,7 +242,12 @@ export default function CustomOrderForm() {
                         id="pickupTime"
                         value={formData.pickupTime}
                         onChange={handleChange}
-                        disabled={!formData.pickupDate || availablePickupTimes.length === 0}
+                        disabled={
+                            !formData.pickupDate ||
+                            availablePickupTimes.length === 0 ||
+                            isSelectedDateFull ||
+                            isCheckingCapacity
+                        }
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400 disabled:opacity-60"
                     >
                         <option value="">Select a pickup time</option>
@@ -206,11 +258,14 @@ export default function CustomOrderForm() {
                         ))}
                     </select>
 
-                    {formData.pickupDate && availablePickupTimes.length === 0 && (
-                        <p className="text-sm text-red-600">
-                            No pickup times are available for the selected date.
-                        </p>
-                    )}
+                    {formData.pickupDate &&
+                        !isCheckingCapacity &&
+                        !isSelectedDateFull &&
+                        availablePickupTimes.length === 0 && (
+                            <p className="text-sm text-red-600">
+                                No pickup times are available for the selected date.
+                            </p>
+                        )}
                 </div>
 
                 <div className="space-y-2">
