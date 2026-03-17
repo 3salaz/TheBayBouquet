@@ -1,21 +1,26 @@
-import { useState, useMemo, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     initialCustomOrderFormData,
     type CustomOrderFormData,
 } from "../form"
-
 import {
     getAvailablePickupTimes,
     getTodayDateString,
+    isDateAtCapacity,
     isPickupDateAllowed,
     isRushDate,
-    isDateAtCapacity
 } from "../pickupAvailability"
-
 import { getConfirmedOrderCountForDate } from "../availabilityService"
-
 import { createCustomOrderRequest } from "../service"
 import { formatTime } from "../utils"
+import {
+    occasionOptions,
+    budgetOptions,
+    flowerTypeOptions,
+    flowerColorOptions,
+    wrappingStyleOptions,
+    quantityOptions,
+} from "../options"
 
 export default function CustomOrderForm() {
     const [formData, setFormData] = useState<CustomOrderFormData>(
@@ -36,6 +41,16 @@ export default function CustomOrderForm() {
 
     const showRushNotice = isRushDate(formData.pickupDate)
     const isSelectedDateFull = isDateAtCapacity(confirmedOrderCount)
+
+    const isFormInvalid =
+        !formData.occasion ||
+        !formData.pickupDate ||
+        !formData.pickupTime ||
+        !formData.customerName ||
+        !formData.customerPhone ||
+        !formData.customerEmail ||
+        isSelectedDateFull ||
+        !!pickupDateError
 
     useEffect(() => {
         async function checkCapacity() {
@@ -59,10 +74,23 @@ export default function CustomOrderForm() {
         checkCapacity()
     }, [formData.pickupDate])
 
+    function isFieldMissing(value: string) {
+        return !value || value.trim() === ""
+    }
+
+    function getOptionLabel(
+        options: Array<{ value: string; label: string }>,
+        value: string
+    ) {
+        return options.find((option) => option.value === value)?.label ?? value
+    }
+
     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) {
         const { id, value } = e.target
+
+        setError(null)
 
         if (id === "pickupDate") {
             setFormData((prev) => {
@@ -136,6 +164,7 @@ export default function CustomOrderForm() {
         if (
             !formData.occasion ||
             !formData.pickupDate ||
+            !formData.pickupTime ||
             !formData.customerName ||
             !formData.customerPhone ||
             !formData.customerEmail
@@ -149,7 +178,7 @@ export default function CustomOrderForm() {
             return
         }
 
-        if (formData.pickupTime && !availablePickupTimes.includes(formData.pickupTime)) {
+        if (!availablePickupTimes.includes(formData.pickupTime)) {
             setError("Please choose a valid pickup time for the selected date.")
             return
         }
@@ -160,22 +189,19 @@ export default function CustomOrderForm() {
         }
 
         try {
-            console.log("submit started")
             setError(null)
             setPickupDateError(null)
             setIsSubmitting(true)
 
-            console.log("about to create request")
-            const id = await createCustomOrderRequest(formData)
-            console.log("request created:", id)
+            await createCustomOrderRequest(formData)
 
             setIsSubmitted(true)
             setFormData(initialCustomOrderFormData)
+            setConfirmedOrderCount(0)
         } catch (err) {
             console.error("Failed to submit custom order request:", err)
             setError("Something went wrong while submitting your request. Please try again.")
         } finally {
-            console.log("submit finished")
             setIsSubmitting(false)
         }
     }
@@ -188,14 +214,18 @@ export default function CustomOrderForm() {
                 </p>
 
                 <p>
-                    We'll review the details and follow up with you shortly to confirm the
-                    order and pickup time.
+                    We&apos;ll review the details and follow up with you shortly to confirm
+                    the order and pickup time.
                 </p>
 
                 <button
+                    type="button"
                     onClick={() => {
                         setIsSubmitted(false)
                         setFormData(initialCustomOrderFormData)
+                        setConfirmedOrderCount(0)
+                        setPickupDateError(null)
+                        setError(null)
                     }}
                     className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600"
                 >
@@ -231,20 +261,17 @@ export default function CustomOrderForm() {
                         onChange={handleChange}
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                     >
-                        <option value="" disabled>
-                            Select an occasion
-                        </option>
-                        <option>Birthday</option>
-                        <option>Anniversary</option>
-                        <option>Graduation</option>
-                        <option>Wedding</option>
-                        <option>Baby Shower</option>
-                        <option>Sympathy</option>
-                        <option>Just Because</option>
-                        <option>Other</option>
+                        <option value="">Select an occasion</option>
+                        {occasionOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
+                    {isFieldMissing(formData.occasion) && (
+                        <p className="text-xs text-red-500">Occasion is required</p>
+                    )}
                 </div>
-
 
                 <div className="space-y-2">
                     <label htmlFor="pickupDate" className="text-sm font-medium">
@@ -260,16 +287,20 @@ export default function CustomOrderForm() {
                     />
 
                     {pickupDateError && (
-                        <p className="text-sm text-red-600">
-                            {pickupDateError}
-                        </p>
+                        <p className="text-sm text-red-600">{pickupDateError}</p>
+                    )}
+
+                    {!pickupDateError && isFieldMissing(formData.pickupDate) && (
+                        <p className="text-xs text-red-500">Pickup date is required</p>
                     )}
 
                     {showRushNotice && isPickupDateAllowed(formData.pickupDate) && (
                         <p className="text-sm text-amber-600">
-                            This is a rush request. Orders within the next 3 days may cost more and will need confirmation.
+                            This is a rush request. Orders within the next 3 days may cost more
+                            and will need confirmation.
                         </p>
                     )}
+
                     {formData.pickupDate && isCheckingCapacity && (
                         <p className="text-sm text-neutral-500">
                             Checking pickup availability...
@@ -288,7 +319,7 @@ export default function CustomOrderForm() {
 
                 <div className="space-y-2">
                     <label htmlFor="pickupTime" className="text-sm font-medium">
-                        Preferred Pickup Time
+                        Preferred Pickup Time <span className="text-rose-500">*</span>
                     </label>
                     <select
                         id="pickupTime"
@@ -309,6 +340,10 @@ export default function CustomOrderForm() {
                             </option>
                         ))}
                     </select>
+
+                    {isFieldMissing(formData.pickupTime) && (
+                        <p className="text-xs text-red-500">Pickup time is required</p>
+                    )}
 
                     {formData.pickupDate &&
                         !isCheckingCapacity &&
@@ -331,11 +366,11 @@ export default function CustomOrderForm() {
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                     >
                         <option value="">Select a budget range</option>
-                        <option value="under-50">Under $50</option>
-                        <option value="50-100">$50 – $100</option>
-                        <option value="100-150">$100 – $150</option>
-                        <option value="150-250">$150 – $250</option>
-                        <option value="250-plus">$250+</option>
+                        {budgetOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
@@ -343,30 +378,20 @@ export default function CustomOrderForm() {
                     <label className="text-sm font-medium">Preferred Flower Types</label>
 
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                        {[
-                            "Roses",
-                            "Tulips",
-                            "Lilies",
-                            "Sunflowers",
-                            "Orchids",
-                            "Carnations",
-                            "Daisies",
-                            "Mixed Bouquet",
-                            "Designer’s Choice",
-                        ].map((type) => (
+                        {flowerTypeOptions.map((option) => (
                             <label
-                                key={type}
+                                key={option.value}
                                 className="flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm"
                             >
                                 <input
                                     type="checkbox"
                                     id="flowerTypes"
-                                    value={type}
-                                    checked={formData.flowerTypes.includes(type)}
+                                    value={option.value}
+                                    checked={formData.flowerTypes.includes(option.value)}
                                     onChange={handleChange}
                                     className="h-4 w-4"
                                 />
-                                <span>{type}</span>
+                                <span>{option.label}</span>
                             </label>
                         ))}
                     </div>
@@ -376,30 +401,20 @@ export default function CustomOrderForm() {
                     <label className="text-sm font-medium">Preferred Colors</label>
 
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                        {[
-                            "Red",
-                            "Pink",
-                            "White",
-                            "Yellow",
-                            "Orange",
-                            "Purple",
-                            "Blue",
-                            "Pastel",
-                            "Neutral",
-                        ].map((color) => (
+                        {flowerColorOptions.map((option) => (
                             <label
-                                key={color}
+                                key={option.value}
                                 className="flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm"
                             >
                                 <input
                                     type="checkbox"
                                     id="flowerColors"
-                                    value={color}
-                                    checked={formData.flowerColors.includes(color)}
+                                    value={option.value}
+                                    checked={formData.flowerColors.includes(option.value)}
                                     onChange={handleChange}
                                     className="h-4 w-4"
                                 />
-                                <span>{color}</span>
+                                <span>{option.label}</span>
                             </label>
                         ))}
                     </div>
@@ -416,18 +431,17 @@ export default function CustomOrderForm() {
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                     >
                         <option value="">Select a wrapping style</option>
-                        <option value="classic">Classic</option>
-                        <option value="elegant">Elegant</option>
-                        <option value="modern">Modern</option>
-                        <option value="rustic">Rustic</option>
-                        <option value="luxury">Luxury</option>
-                        <option value="designer-choice">Designer’s Choice</option>
+                        {wrappingStyleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="quantity" className="text-sm font-medium">
-                        Bouquet Size
+                        Stem Count / Size
                     </label>
                     <select
                         id="quantity"
@@ -436,9 +450,11 @@ export default function CustomOrderForm() {
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                     >
                         <option value="">Select a bouquet size</option>
-                        <option value="24-stems">24 stems</option>
-                        <option value="36-stems">36 stems</option>
-                        <option value="custom">Custom</option>
+                        {quantityOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
@@ -482,6 +498,9 @@ export default function CustomOrderForm() {
                         value={formData.customerName}
                         onChange={handleChange}
                     />
+                    {isFieldMissing(formData.customerName) && (
+                        <p className="text-xs text-red-500">Name is required</p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -496,6 +515,9 @@ export default function CustomOrderForm() {
                         value={formData.customerPhone}
                         onChange={handleChange}
                     />
+                    {isFieldMissing(formData.customerPhone) && (
+                        <p className="text-xs text-red-500">Phone number is required</p>
+                    )}
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -510,12 +532,79 @@ export default function CustomOrderForm() {
                         value={formData.customerEmail}
                         onChange={handleChange}
                     />
+                    {isFieldMissing(formData.customerEmail) && (
+                        <p className="text-xs text-red-500">Email address is required</p>
+                    )}
+                </div>
+
+                <div className="md:col-span-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                    <h3 className="mb-2 text-sm font-semibold text-neutral-700">
+                        Order Summary
+                    </h3>
+
+                    <div className="grid gap-2 text-sm text-neutral-600">
+                        <p>
+                            <span className="font-medium">Occasion:</span>{" "}
+                            {formData.occasion
+                                ? getOptionLabel(occasionOptions, formData.occasion)
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Pickup:</span>{" "}
+                            {formData.pickupDate
+                                ? `${formData.pickupDate}${formData.pickupTime
+                                    ? ` at ${formatTime(formData.pickupTime)}`
+                                    : ""
+                                }`
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Budget:</span>{" "}
+                            {formData.budget
+                                ? getOptionLabel(budgetOptions, formData.budget)
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Flowers:</span>{" "}
+                            {formData.flowerTypes.length > 0
+                                ? formData.flowerTypes
+                                    .map((value) => getOptionLabel(flowerTypeOptions, value))
+                                    .join(", ")
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Colors:</span>{" "}
+                            {formData.flowerColors.length > 0
+                                ? formData.flowerColors
+                                    .map((value) => getOptionLabel(flowerColorOptions, value))
+                                    .join(", ")
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Style:</span>{" "}
+                            {formData.wrappingStyle
+                                ? getOptionLabel(wrappingStyleOptions, formData.wrappingStyle)
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Size:</span>{" "}
+                            {formData.quantity
+                                ? getOptionLabel(quantityOptions, formData.quantity)
+                                : "—"}
+                        </p>
+                    </div>
                 </div>
 
                 <div className="md:col-span-2">
                     <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isFormInvalid}
                         className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600 disabled:opacity-60"
                     >
                         {isSubmitting ? "Submitting..." : "Submit Request"}
