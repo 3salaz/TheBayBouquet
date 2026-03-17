@@ -64,8 +64,8 @@ export default function CustomOrderForm() {
     ) {
         const { id, value } = e.target
 
-        setFormData((prev) => {
-            if (id === "pickupDate") {
+        if (id === "pickupDate") {
+            setFormData((prev) => {
                 if (!value) {
                     setPickupDateError(null)
                     return {
@@ -93,13 +93,28 @@ export default function CustomOrderForm() {
                     pickupDate: value,
                     pickupTime: "",
                 }
-            }
+            })
 
-            return {
+            return
+        }
+
+        if (id === "flowerColors" && e.target instanceof HTMLInputElement) {
+            const { checked } = e.target
+
+            setFormData((prev) => ({
                 ...prev,
-                [id]: value,
-            }
-        })
+                flowerColors: checked
+                    ? [...prev.flowerColors, value]
+                    : prev.flowerColors.filter((color) => color !== value),
+            }))
+
+            return
+        }
+
+        setFormData((prev) => ({
+            ...prev,
+            [id]: value,
+        }))
     }
 
     async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -311,18 +326,38 @@ export default function CustomOrderForm() {
                     </select>
                 </div>
 
-                <div className="space-y-2">
-                    <label htmlFor="flowerTypes" className="text-sm font-medium">
-                        Preferred Flower Types
-                    </label>
-                    <input
-                        id="flowerTypes"
-                        type="text"
-                        placeholder="Roses, tulips, lilies..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                        value={formData.flowerTypes}
-                        onChange={handleChange}
-                    />
+                <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Preferred Colors</label>
+
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {[
+                            "Red",
+                            "Pink",
+                            "White",
+                            "Yellow",
+                            "Orange",
+                            "Purple",
+                            "Blue",
+                            "Green",
+                            "Pastel",
+                            "Neutral",
+                        ].map((color) => (
+                            <label
+                                key={color}
+                                className="flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    id="flowerColors"
+                                    value={color}
+                                    checked={formData.flowerColors.includes(color)}
+                                    onChange={handleChange}
+                                    className="h-4 w-4"
+                                />
+                                <span>{color}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="space-y-2">

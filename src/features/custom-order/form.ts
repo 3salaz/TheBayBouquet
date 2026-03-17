@@ -3,7 +3,7 @@ export type CustomOrderFormData = {
     pickupDate: string
     pickupTime: string
     flowerTypes: string
-    flowerColors: string
+    flowerColors: string[]
     wrappingStyle: string
     quantity: string
     lettering: string
@@ -19,7 +19,7 @@ export const initialCustomOrderFormData: CustomOrderFormData = {
     pickupDate: "",
     pickupTime: "",
     flowerTypes: "",
-    flowerColors: "",
+    flowerColors: [],
     wrappingStyle: "",
     quantity: "",
     lettering: "",
