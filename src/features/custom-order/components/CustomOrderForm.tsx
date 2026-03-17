@@ -1,10 +1,18 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
     initialCustomOrderFormData,
     type CustomOrderFormData,
 } from "../form"
 
+import {
+    getAvailablePickupTimes,
+    getTodayDateString,
+    isPickupDateAllowed,
+    isRushDate,
+} from "../pickupAvailability"
+
 import { createCustomOrderRequest } from "../service"
+import { formatTime } from "../utils"
 
 export default function CustomOrderForm() {
     const [formData, setFormData] = useState<CustomOrderFormData>(
@@ -15,49 +23,77 @@ export default function CustomOrderForm() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    const availablePickupTimes = useMemo(
+        () => getAvailablePickupTimes(formData.pickupDate),
+        [formData.pickupDate]
+    )
+
+    const showRushNotice = isRushDate(formData.pickupDate)
+
     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) {
         const { id, value } = e.target
-        setFormData((prev) => ({
-            ...prev,
-            [id]: value,
-        }))
+
+        setFormData((prev) => {
+            if (id === "pickupDate") {
+                return {
+                    ...prev,
+                    pickupDate: value,
+                    pickupTime: "",
+                }
+            }
+
+            return {
+                ...prev,
+                [id]: value,
+            }
+        })
     }
 
     async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-  e.preventDefault()
+        e.preventDefault()
 
-  if (
-    !formData.occasion ||
-    !formData.pickupDate ||
-    !formData.customerName ||
-    !formData.customerPhone ||
-    !formData.customerEmail
-  ) {
-    setError("Please fill in the required fields before submitting.")
-    return
-  }
+        if (
+            !formData.occasion ||
+            !formData.pickupDate ||
+            !formData.customerName ||
+            !formData.customerPhone ||
+            !formData.customerEmail
+        ) {
+            setError("Please fill in the required fields before submitting.")
+            return
+        }
 
-  try {
-    console.log("submit started")
-    setError(null)
-    setIsSubmitting(true)
+        if (!isPickupDateAllowed(formData.pickupDate)) {
+            setError("Please choose a valid pickup date based on current availability.")
+            return
+        }
 
-    console.log("about to create request")
-    const id = await createCustomOrderRequest(formData)
-    console.log("request created:", id)
+        if (formData.pickupTime && !availablePickupTimes.includes(formData.pickupTime)) {
+            setError("Please choose a valid pickup time for the selected date.")
+            return
+        }
 
-    setIsSubmitted(true)
-    setFormData(initialCustomOrderFormData)
-  } catch (err) {
-    console.error("Failed to submit custom order request:", err)
-    setError("Something went wrong while submitting your request. Please try again.")
-  } finally {
-    console.log("submit finished")
-    setIsSubmitting(false)
-  }
-}
+        try {
+            console.log("submit started")
+            setError(null)
+            setIsSubmitting(true)
+
+            console.log("about to create request")
+            const id = await createCustomOrderRequest(formData)
+            console.log("request created:", id)
+
+            setIsSubmitted(true)
+            setFormData(initialCustomOrderFormData)
+        } catch (err) {
+            console.error("Failed to submit custom order request:", err)
+            setError("Something went wrong while submitting your request. Please try again.")
+        } finally {
+            console.log("submit finished")
+            setIsSubmitting(false)
+        }
+    }
 
     if (isSubmitted) {
         return (
@@ -124,6 +160,7 @@ export default function CustomOrderForm() {
                     </select>
                 </div>
 
+
                 <div className="space-y-2">
                     <label htmlFor="pickupDate" className="text-sm font-medium">
                         Pickup Date <span className="text-rose-500">*</span>
@@ -131,23 +168,49 @@ export default function CustomOrderForm() {
                     <input
                         id="pickupDate"
                         type="date"
+                        min={getTodayDateString()}
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.pickupDate}
                         onChange={handleChange}
                     />
+
+                    {formData.pickupDate && !isPickupDateAllowed(formData.pickupDate) && (
+                        <p className="text-sm text-red-600">
+                            That pickup date is not available. Please choose a valid future operating day.
+                        </p>
+                    )}
+
+                    {showRushNotice && isPickupDateAllowed(formData.pickupDate) && (
+                        <p className="text-sm text-amber-600">
+                            This is a rush request. Orders within the next 3 days may cost more and will need confirmation.
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="pickupTime" className="text-sm font-medium">
                         Preferred Pickup Time
                     </label>
-                    <input
+                    <select
                         id="pickupTime"
-                        type="time"
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.pickupTime}
                         onChange={handleChange}
-                    />
+                        disabled={!formData.pickupDate || availablePickupTimes.length === 0}
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400 disabled:opacity-60"
+                    >
+                        <option value="">Select a pickup time</option>
+                        {availablePickupTimes.map((time) => (
+                            <option key={time} value={time}>
+                                {formatTime(time)}
+                            </option>
+                        ))}
+                    </select>
+
+                    {formData.pickupDate && availablePickupTimes.length === 0 && (
+                        <p className="text-sm text-red-600">
+                            No pickup times are available for the selected date.
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
