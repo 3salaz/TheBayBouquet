@@ -296,14 +296,19 @@ export default function CustomOrderForm() {
                     <label htmlFor="budget" className="text-sm font-medium">
                         Budget
                     </label>
-                    <input
+                    <select
                         id="budget"
-                        type="text"
-                        placeholder="$50 - $100"
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.budget}
                         onChange={handleChange}
-                    />
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    >
+                        <option value="">Select a budget range</option>
+                        <option value="under-50">Under $50</option>
+                        <option value="50-100">$50 – $100</option>
+                        <option value="100-150">$100 – $150</option>
+                        <option value="150-250">$150 – $250</option>
+                        <option value="250-plus">$250+</option>
+                    </select>
                 </div>
 
                 <div className="space-y-2">
