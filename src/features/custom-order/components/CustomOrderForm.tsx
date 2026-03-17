@@ -11,6 +11,8 @@ import {
     isRushDate,
 } from "../pickupAvailability"
 import { getConfirmedOrderCountForDate } from "../availabilityService"
+import type { PickupAvailabilitySettings } from "../availabilitySettings"
+import { getPickupAvailabilitySettings } from "../availabilitySettingsService"
 import { createCustomOrderRequest } from "../service"
 import { formatTime } from "../utils"
 import {
@@ -33,14 +35,16 @@ export default function CustomOrderForm() {
     const [confirmedOrderCount, setConfirmedOrderCount] = useState(0)
     const [isCheckingCapacity, setIsCheckingCapacity] = useState(false)
     const [pickupDateError, setPickupDateError] = useState<string | null>(null)
+    const [settings, setSettings] = useState<PickupAvailabilitySettings | null>(null)
+    const safeSettings = settings as PickupAvailabilitySettings
 
     const availablePickupTimes = useMemo(
-        () => getAvailablePickupTimes(formData.pickupDate),
+        () => getAvailablePickupTimes(formData.pickupDate, safeSettings),
         [formData.pickupDate]
     )
 
-    const showRushNotice = isRushDate(formData.pickupDate)
-    const isSelectedDateFull = isDateAtCapacity(confirmedOrderCount)
+    const showRushNotice = isRushDate(formData.pickupDate, safeSettings)
+    const isSelectedDateFull = isDateAtCapacity(confirmedOrderCount, safeSettings)
 
     const isFormInvalid =
         !formData.occasion ||
@@ -53,8 +57,21 @@ export default function CustomOrderForm() {
         !!pickupDateError
 
     useEffect(() => {
+        async function loadSettings() {
+            try {
+                const data = await getPickupAvailabilitySettings()
+                setSettings(data)
+            } catch (err) {
+                console.error("Failed to load availability settings:", err)
+            }
+        }
+
+        loadSettings()
+    }, [])
+
+    useEffect(() => {
         async function checkCapacity() {
-            if (!formData.pickupDate || !isPickupDateAllowed(formData.pickupDate)) {
+            if (!formData.pickupDate || !isPickupDateAllowed(formData.pickupDate, safeSettings)) {
                 setConfirmedOrderCount(0)
                 return
             }
@@ -103,7 +120,7 @@ export default function CustomOrderForm() {
                     }
                 }
 
-                if (!isPickupDateAllowed(value)) {
+                if (!isPickupDateAllowed(value, safeSettings)) {
                     setPickupDateError(
                         "That pickup date is not available. Please choose a future operating day."
                     )
@@ -173,7 +190,7 @@ export default function CustomOrderForm() {
             return
         }
 
-        if (!isPickupDateAllowed(formData.pickupDate)) {
+        if (!isPickupDateAllowed(formData.pickupDate, safeSettings)) {
             setError("Please choose a valid pickup date based on current availability.")
             return
         }
@@ -235,6 +252,11 @@ export default function CustomOrderForm() {
         )
     }
 
+    if (!settings) {
+        return <div>Loading availability...</div>
+    }
+
+
     return (
         <>
             <p className="text-sm text-neutral-500">
@@ -294,7 +316,7 @@ export default function CustomOrderForm() {
                         <p className="text-xs text-red-500">Pickup date is required</p>
                     )}
 
-                    {showRushNotice && isPickupDateAllowed(formData.pickupDate) && (
+                    {showRushNotice && isPickupDateAllowed(formData.pickupDate, safeSettings) && (
                         <p className="text-sm text-amber-600">
                             This is a rush request. Orders within the next 3 days may cost more
                             and will need confirmation.
@@ -309,7 +331,7 @@ export default function CustomOrderForm() {
 
                     {formData.pickupDate &&
                         !isCheckingCapacity &&
-                        isPickupDateAllowed(formData.pickupDate) &&
+                        isPickupDateAllowed(formData.pickupDate, safeSettings) &&
                         isSelectedDateFull && (
                             <p className="text-sm text-red-600">
                                 That date is fully booked. Please choose another pickup date.
