@@ -1,10 +1,26 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     initialCustomOrderFormData,
     type CustomOrderFormData,
 } from "../form"
-
+import {
+    getAvailablePickupTimes,
+    getTodayDateString,
+    isDateAtCapacity,
+    isPickupDateAllowed,
+    isRushDate,
+} from "../pickupAvailability"
+import { getConfirmedOrderCountForDate } from "../availabilityService"
 import { createCustomOrderRequest } from "../service"
+import { formatTime } from "../utils"
+import {
+    occasionOptions,
+    budgetOptions,
+    flowerTypeOptions,
+    flowerColorOptions,
+    wrappingStyleOptions,
+    quantityOptions,
+} from "../options"
 
 export default function CustomOrderForm() {
     const [formData, setFormData] = useState<CustomOrderFormData>(
@@ -14,11 +30,128 @@ export default function CustomOrderForm() {
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [confirmedOrderCount, setConfirmedOrderCount] = useState(0)
+    const [isCheckingCapacity, setIsCheckingCapacity] = useState(false)
+    const [pickupDateError, setPickupDateError] = useState<string | null>(null)
+
+    const availablePickupTimes = useMemo(
+        () => getAvailablePickupTimes(formData.pickupDate),
+        [formData.pickupDate]
+    )
+
+    const showRushNotice = isRushDate(formData.pickupDate)
+    const isSelectedDateFull = isDateAtCapacity(confirmedOrderCount)
+
+    const isFormInvalid =
+        !formData.occasion ||
+        !formData.pickupDate ||
+        !formData.pickupTime ||
+        !formData.customerName ||
+        !formData.customerPhone ||
+        !formData.customerEmail ||
+        isSelectedDateFull ||
+        !!pickupDateError
+
+    useEffect(() => {
+        async function checkCapacity() {
+            if (!formData.pickupDate || !isPickupDateAllowed(formData.pickupDate)) {
+                setConfirmedOrderCount(0)
+                return
+            }
+
+            try {
+                setIsCheckingCapacity(true)
+                const count = await getConfirmedOrderCountForDate(formData.pickupDate)
+                setConfirmedOrderCount(count)
+            } catch (err) {
+                console.error("Failed to check pickup date capacity:", err)
+                setConfirmedOrderCount(0)
+            } finally {
+                setIsCheckingCapacity(false)
+            }
+        }
+
+        checkCapacity()
+    }, [formData.pickupDate])
+
+    function isFieldMissing(value: string) {
+        return !value || value.trim() === ""
+    }
+
+    function getOptionLabel(
+        options: Array<{ value: string; label: string }>,
+        value: string
+    ) {
+        return options.find((option) => option.value === value)?.label ?? value
+    }
 
     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) {
         const { id, value } = e.target
+
+        setError(null)
+
+        if (id === "pickupDate") {
+            setFormData((prev) => {
+                if (!value) {
+                    setPickupDateError(null)
+                    return {
+                        ...prev,
+                        pickupDate: "",
+                        pickupTime: "",
+                    }
+                }
+
+                if (!isPickupDateAllowed(value)) {
+                    setPickupDateError(
+                        "That pickup date is not available. Please choose a future operating day."
+                    )
+                    return {
+                        ...prev,
+                        pickupDate: "",
+                        pickupTime: "",
+                    }
+                }
+
+                setPickupDateError(null)
+
+                return {
+                    ...prev,
+                    pickupDate: value,
+                    pickupTime: "",
+                }
+            })
+
+            return
+        }
+
+        if (id === "flowerColors" && e.target instanceof HTMLInputElement) {
+            const { checked } = e.target
+
+            setFormData((prev) => ({
+                ...prev,
+                flowerColors: checked
+                    ? [...prev.flowerColors, value]
+                    : prev.flowerColors.filter((color) => color !== value),
+            }))
+
+            return
+        }
+
+        if (id === "flowerTypes" && e.target instanceof HTMLInputElement) {
+            const { checked } = e.target
+
+            setFormData((prev) => ({
+                ...prev,
+                flowerTypes: checked
+                    ? [...prev.flowerTypes, value]
+                    : prev.flowerTypes.filter((type) => type !== value),
+            }))
+
+            return
+        }
+
         setFormData((prev) => ({
             ...prev,
             [id]: value,
@@ -31,6 +164,7 @@ export default function CustomOrderForm() {
         if (
             !formData.occasion ||
             !formData.pickupDate ||
+            !formData.pickupTime ||
             !formData.customerName ||
             !formData.customerPhone ||
             !formData.customerEmail
@@ -39,14 +173,31 @@ export default function CustomOrderForm() {
             return
         }
 
+        if (!isPickupDateAllowed(formData.pickupDate)) {
+            setError("Please choose a valid pickup date based on current availability.")
+            return
+        }
+
+        if (!availablePickupTimes.includes(formData.pickupTime)) {
+            setError("Please choose a valid pickup time for the selected date.")
+            return
+        }
+
+        if (isSelectedDateFull) {
+            setError("That pickup date is fully booked. Please choose another date.")
+            return
+        }
+
         try {
             setError(null)
+            setPickupDateError(null)
             setIsSubmitting(true)
 
             await createCustomOrderRequest(formData)
 
             setIsSubmitted(true)
             setFormData(initialCustomOrderFormData)
+            setConfirmedOrderCount(0)
         } catch (err) {
             console.error("Failed to submit custom order request:", err)
             setError("Something went wrong while submitting your request. Please try again.")
@@ -63,14 +214,18 @@ export default function CustomOrderForm() {
                 </p>
 
                 <p>
-                    We'll review the details and follow up with you shortly to confirm the
-                    order and pickup time.
+                    We&apos;ll review the details and follow up with you shortly to confirm
+                    the order and pickup time.
                 </p>
 
                 <button
+                    type="button"
                     onClick={() => {
                         setIsSubmitted(false)
                         setFormData(initialCustomOrderFormData)
+                        setConfirmedOrderCount(0)
+                        setPickupDateError(null)
+                        setError(null)
                     }}
                     className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600"
                 >
@@ -106,18 +261,16 @@ export default function CustomOrderForm() {
                         onChange={handleChange}
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                     >
-                        <option value="" disabled>
-                            Select an occasion
-                        </option>
-                        <option>Birthday</option>
-                        <option>Anniversary</option>
-                        <option>Graduation</option>
-                        <option>Wedding</option>
-                        <option>Baby Shower</option>
-                        <option>Sympathy</option>
-                        <option>Just Because</option>
-                        <option>Other</option>
+                        <option value="">Select an occasion</option>
+                        {occasionOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
+                    {isFieldMissing(formData.occasion) && (
+                        <p className="text-xs text-red-500">Occasion is required</p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -127,93 +280,182 @@ export default function CustomOrderForm() {
                     <input
                         id="pickupDate"
                         type="date"
+                        min={getTodayDateString()}
                         className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.pickupDate}
                         onChange={handleChange}
                     />
+
+                    {pickupDateError && (
+                        <p className="text-sm text-red-600">{pickupDateError}</p>
+                    )}
+
+                    {!pickupDateError && isFieldMissing(formData.pickupDate) && (
+                        <p className="text-xs text-red-500">Pickup date is required</p>
+                    )}
+
+                    {showRushNotice && isPickupDateAllowed(formData.pickupDate) && (
+                        <p className="text-sm text-amber-600">
+                            This is a rush request. Orders within the next 3 days may cost more
+                            and will need confirmation.
+                        </p>
+                    )}
+
+                    {formData.pickupDate && isCheckingCapacity && (
+                        <p className="text-sm text-neutral-500">
+                            Checking pickup availability...
+                        </p>
+                    )}
+
+                    {formData.pickupDate &&
+                        !isCheckingCapacity &&
+                        isPickupDateAllowed(formData.pickupDate) &&
+                        isSelectedDateFull && (
+                            <p className="text-sm text-red-600">
+                                That date is fully booked. Please choose another pickup date.
+                            </p>
+                        )}
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="pickupTime" className="text-sm font-medium">
-                        Preferred Pickup Time
+                        Preferred Pickup Time <span className="text-rose-500">*</span>
                     </label>
-                    <input
+                    <select
                         id="pickupTime"
-                        type="time"
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.pickupTime}
                         onChange={handleChange}
-                    />
+                        disabled={
+                            !formData.pickupDate ||
+                            availablePickupTimes.length === 0 ||
+                            isSelectedDateFull ||
+                            isCheckingCapacity
+                        }
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400 disabled:opacity-60"
+                    >
+                        <option value="">Select a pickup time</option>
+                        {availablePickupTimes.map((time) => (
+                            <option key={time} value={time}>
+                                {formatTime(time)}
+                            </option>
+                        ))}
+                    </select>
+
+                    {isFieldMissing(formData.pickupTime) && (
+                        <p className="text-xs text-red-500">Pickup time is required</p>
+                    )}
+
+                    {formData.pickupDate &&
+                        !isCheckingCapacity &&
+                        !isSelectedDateFull &&
+                        availablePickupTimes.length === 0 && (
+                            <p className="text-sm text-red-600">
+                                No pickup times are available for the selected date.
+                            </p>
+                        )}
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="budget" className="text-sm font-medium">
                         Budget
                     </label>
-                    <input
+                    <select
                         id="budget"
-                        type="text"
-                        placeholder="$50 - $100"
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.budget}
                         onChange={handleChange}
-                    />
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    >
+                        <option value="">Select a budget range</option>
+                        {budgetOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
-                <div className="space-y-2">
-                    <label htmlFor="flowerTypes" className="text-sm font-medium">
-                        Preferred Flower Types
-                    </label>
-                    <input
-                        id="flowerTypes"
-                        type="text"
-                        placeholder="Roses, tulips, lilies..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                        value={formData.flowerTypes}
-                        onChange={handleChange}
-                    />
+                <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Preferred Flower Types</label>
+
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {flowerTypeOptions.map((option) => (
+                            <label
+                                key={option.value}
+                                className="flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    id="flowerTypes"
+                                    value={option.value}
+                                    checked={formData.flowerTypes.includes(option.value)}
+                                    onChange={handleChange}
+                                    className="h-4 w-4"
+                                />
+                                <span>{option.label}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label htmlFor="flowerColors" className="text-sm font-medium">
-                        Preferred Colors
-                    </label>
-                    <input
-                        id="flowerColors"
-                        type="text"
-                        placeholder="Pink, white, red..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
-                        value={formData.flowerColors}
-                        onChange={handleChange}
-                    />
+                <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Preferred Colors</label>
+
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {flowerColorOptions.map((option) => (
+                            <label
+                                key={option.value}
+                                className="flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    id="flowerColors"
+                                    value={option.value}
+                                    checked={formData.flowerColors.includes(option.value)}
+                                    onChange={handleChange}
+                                    className="h-4 w-4"
+                                />
+                                <span>{option.label}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="wrappingStyle" className="text-sm font-medium">
                         Wrapping Style
                     </label>
-                    <input
+                    <select
                         id="wrappingStyle"
-                        type="text"
-                        placeholder="Elegant, rustic, modern..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.wrappingStyle}
                         onChange={handleChange}
-                    />
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    >
+                        <option value="">Select a wrapping style</option>
+                        {wrappingStyleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="space-y-2">
                     <label htmlFor="quantity" className="text-sm font-medium">
-                        Bouquet Size / Amount of Flowers
+                        Stem Count / Size
                     </label>
-                    <input
+                    <select
                         id="quantity"
-                        type="text"
-                        placeholder="Small, medium, 24 roses..."
-                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
                         value={formData.quantity}
                         onChange={handleChange}
-                    />
+                        className="w-full rounded-xl border border-rose-200 bg-white px-4 py-3 outline-none focus:border-rose-400"
+                    >
+                        <option value="">Select a bouquet size</option>
+                        {quantityOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -256,6 +498,9 @@ export default function CustomOrderForm() {
                         value={formData.customerName}
                         onChange={handleChange}
                     />
+                    {isFieldMissing(formData.customerName) && (
+                        <p className="text-xs text-red-500">Name is required</p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -270,6 +515,9 @@ export default function CustomOrderForm() {
                         value={formData.customerPhone}
                         onChange={handleChange}
                     />
+                    {isFieldMissing(formData.customerPhone) && (
+                        <p className="text-xs text-red-500">Phone number is required</p>
+                    )}
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -284,12 +532,79 @@ export default function CustomOrderForm() {
                         value={formData.customerEmail}
                         onChange={handleChange}
                     />
+                    {isFieldMissing(formData.customerEmail) && (
+                        <p className="text-xs text-red-500">Email address is required</p>
+                    )}
+                </div>
+
+                <div className="md:col-span-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                    <h3 className="mb-2 text-sm font-semibold text-neutral-700">
+                        Order Summary
+                    </h3>
+
+                    <div className="grid gap-2 text-sm text-neutral-600">
+                        <p>
+                            <span className="font-medium">Occasion:</span>{" "}
+                            {formData.occasion
+                                ? getOptionLabel(occasionOptions, formData.occasion)
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Pickup:</span>{" "}
+                            {formData.pickupDate
+                                ? `${formData.pickupDate}${formData.pickupTime
+                                    ? ` at ${formatTime(formData.pickupTime)}`
+                                    : ""
+                                }`
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Budget:</span>{" "}
+                            {formData.budget
+                                ? getOptionLabel(budgetOptions, formData.budget)
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Flowers:</span>{" "}
+                            {formData.flowerTypes.length > 0
+                                ? formData.flowerTypes
+                                    .map((value) => getOptionLabel(flowerTypeOptions, value))
+                                    .join(", ")
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Colors:</span>{" "}
+                            {formData.flowerColors.length > 0
+                                ? formData.flowerColors
+                                    .map((value) => getOptionLabel(flowerColorOptions, value))
+                                    .join(", ")
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Style:</span>{" "}
+                            {formData.wrappingStyle
+                                ? getOptionLabel(wrappingStyleOptions, formData.wrappingStyle)
+                                : "—"}
+                        </p>
+
+                        <p>
+                            <span className="font-medium">Size:</span>{" "}
+                            {formData.quantity
+                                ? getOptionLabel(quantityOptions, formData.quantity)
+                                : "—"}
+                        </p>
+                    </div>
                 </div>
 
                 <div className="md:col-span-2">
                     <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isFormInvalid}
                         className="inline-flex items-center justify-center rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-rose-600 disabled:opacity-60"
                     >
                         {isSubmitting ? "Submitting..." : "Submit Request"}
