@@ -9,6 +9,7 @@ import {
 import SectionHeading from "../components/ui/SectionHeading"
 import { db } from "../lib/firebase"
 import { updateCustomOrderStatus } from "../features/custom-order/admin-service"
+import AdminLayout from "../features/admin/layout/AdminLayout"
 
 type CustomOrderStatus = "new" | "confirmed" | "ready" | "completed"
 type RequestFilter = "all" | CustomOrderStatus
@@ -152,6 +153,7 @@ export default function AdminRequestsPage() {
   }
 
   return (
+    <AdminLayout>
     <section className="space-y-8">
       <SectionHeading
         title="Admin Requests"
@@ -441,5 +443,6 @@ export default function AdminRequestsPage() {
         </>
       )}
     </section>
+    </AdminLayout>
   )
 }

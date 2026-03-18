@@ -46,29 +46,25 @@ export default function CustomOrderForm() {
         setSettings(data)
       } catch (err) {
         console.error("Failed to load availability settings:", err)
+        setError("Failed to load availability settings.")
       }
     }
 
     loadSettings()
   }, [])
 
-  if (!settings) {
-    return (
-      <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
-        Loading availability...
-      </div>
-    )
-  }
+  const availablePickupTimes = useMemo(() => {
+    if (!settings) return []
+    return getAvailablePickupTimes(formData.pickupDate, settings)
+  }, [formData.pickupDate, settings])
 
-  const availabilitySettings = settings
+  const showRushNotice = settings
+    ? isRushDate(formData.pickupDate, settings)
+    : false
 
-  const availablePickupTimes = useMemo(
-    () => getAvailablePickupTimes(formData.pickupDate, settings),
-    [formData.pickupDate, settings]
-  )
-
-  const showRushNotice = isRushDate(formData.pickupDate, settings)
-  const isSelectedDateFull = isDateAtCapacity(confirmedOrderCount, settings)
+  const isSelectedDateFull = settings
+    ? isDateAtCapacity(confirmedOrderCount, settings)
+    : false
 
   const isFormInvalid =
     !formData.occasion ||
@@ -78,13 +74,19 @@ export default function CustomOrderForm() {
     !formData.customerPhone ||
     !formData.customerEmail ||
     isSelectedDateFull ||
-    !!pickupDateError
+    !!pickupDateError ||
+    !settings
 
   useEffect(() => {
     async function checkCapacity() {
+      if (!settings) {
+        setConfirmedOrderCount(0)
+        return
+      }
+
       if (
         !formData.pickupDate ||
-        !isPickupDateAllowed(formData.pickupDate, availabilitySettings)
+        !isPickupDateAllowed(formData.pickupDate, settings)
       ) {
         setConfirmedOrderCount(0)
         return
@@ -134,7 +136,7 @@ export default function CustomOrderForm() {
           }
         }
 
-        if (!isPickupDateAllowed(value, availabilitySettings)) {
+        if (!settings || !isPickupDateAllowed(value, settings)) {
           setPickupDateError(
             "That pickup date is not available. Please choose a future operating day."
           )
@@ -204,7 +206,7 @@ export default function CustomOrderForm() {
       return
     }
 
-    if (!isPickupDateAllowed(formData.pickupDate, availabilitySettings)) {
+    if (!settings || !isPickupDateAllowed(formData.pickupDate, settings)) {
       setError("Please choose a valid pickup date based on current availability.")
       return
     }
@@ -262,6 +264,14 @@ export default function CustomOrderForm() {
         >
           New Request
         </button>
+      </div>
+    )
+  }
+
+  if (!settings) {
+    return (
+      <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
+        {error || "Loading availability..."}
       </div>
     )
   }
@@ -325,12 +335,13 @@ export default function CustomOrderForm() {
             <p className="text-xs text-red-500">Pickup date is required</p>
           )}
 
-          {showRushNotice && isPickupDateAllowed(formData.pickupDate, settings) && (
-            <p className="text-sm text-amber-600">
-              This is a rush request. Orders within the next 3 days may cost more
-              and will need confirmation.
-            </p>
-          )}
+          {showRushNotice &&
+            isPickupDateAllowed(formData.pickupDate, settings) && (
+              <p className="text-sm text-amber-600">
+                This is a rush request. Orders within the next 3 days may cost
+                more and will need confirmation.
+              </p>
+            )}
 
           {formData.pickupDate && isCheckingCapacity && (
             <p className="text-sm text-neutral-500">
